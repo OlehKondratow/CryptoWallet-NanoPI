@@ -6,3 +6,4 @@ tmp/
 *.swo
 infra/.env
 .venv/
+legacy-stm32-cryptowallet/
