@@ -1,0 +1,8 @@
+build/
+downloads/
+sstate-cache/
+tmp/
+*.swp
+*.swo
+infra/.env
+.venv/

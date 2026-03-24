@@ -1,0 +1,18 @@
+services:
+  yocto-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: cryptowallet-yocto-dev:latest
+    container_name: cryptowallet-yocto-dev
+    working_dir: /work
+    stdin_open: true
+    tty: true
+    environment:
+      YOCTO_BRANCH: ${YOCTO_BRANCH:-scarthgap}
+      BB_NUMBER_THREADS: ${BB_NUMBER_THREADS:-4}
+      PARALLEL_MAKE: ${PARALLEL_MAKE:--j 4}
+    volumes:
+      - ../:/work
+      - ${YOCTO_DL_DIR:-../downloads}:/work/downloads
+      - ${YOCTO_SSTATE_DIR:-../sstate-cache}:/work/sstate-cache

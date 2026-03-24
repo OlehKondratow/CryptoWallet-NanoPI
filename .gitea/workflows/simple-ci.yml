@@ -1,0 +1,35 @@
+name: Simple CI
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+
+jobs:
+  validate-project:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate bootstrap script syntax
+        run: |
+          bash -n scripts/bootstrap.sh
+
+      - name: Validate required project files
+        run: |
+          test -f README.md
+          test -f build/conf/bblayers.conf.sample
+          test -f build/conf/local.conf.sample
+          test -f meta-cryptowallet/conf/layer.conf
+          test -f meta-cryptowallet/recipes-core/images/cryptowallet-image.bb
+          test -f meta-cryptowallet/recipes-crypto/cryptowallet/cryptowallet_0.1.bb
+          test -f docs/migration-plan-stm32-to-yocto.md
+
+      - name: Basic Yocto metadata sanity checks
+        run: |
+          grep -q 'LAYERSERIES_COMPAT_cryptowallet' meta-cryptowallet/conf/layer.conf
+          grep -q 'MACHINE ??= "nanopi-neo"' build/conf/local.conf.sample
+          grep -q 'cryptowallet-image' README.md
