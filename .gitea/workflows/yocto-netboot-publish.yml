@@ -1,19 +1,19 @@
-# Публикация артефактов Yocto на TFTP/NFS и перезагрузка NanoPi для загрузки с сети.
-# Раннер: cryptowallet-host (ws8), где лежат каталоги netboot и (после bitbake) deploy.
+# Publish Yocto artifacts to TFTP/NFS and reboot the board for network boot.
+# Runner: cryptowallet-host (ws8) with netboot dirs and (after bitbake) deploy output.
 #
-# Перед первым запуском на хосте:
-#   - bitbake cryptowallet-image или core-image-minimal (orange-pi-one)
-#   - rootfs: скрипт распакует tar в NETBOOT_NFSROOT (по умолчанию infra/nanopi/netboot/nfsroot)
+# Before first run on the host:
+#   - bitbake cryptowallet-image or core-image-minimal (orange-pi-one)
+#   - rootfs: the job unpacks a tar into NETBOOT_NFSROOT (default infra/nanopi/netboot/nfsroot)
 #
-# Переменные репозитория (Settings -> Actions -> Variables) — при необходимости:
-#   YOCTO_DEPLOY_DIR  — например /data/projects/poky/build/tmp/deploy/images/orange-pi-one
-#   NETBOOT_TFTP      — по умолчанию ${GITHUB_WORKSPACE}/infra/nanopi/netboot/tftp
-#   NETBOOT_NFSROOT   — по умолчанию ${GITHUB_WORKSPACE}/infra/nanopi/netboot/nfsroot
+# Repository variables (Settings -> Actions -> Variables) if needed:
+#   YOCTO_DEPLOY_DIR  — e.g. /data/projects/poky/build/tmp/deploy/images/orange-pi-one
+#   NETBOOT_TFTP      — default ${GITHUB_WORKSPACE}/infra/nanopi/netboot/tftp
+#   NETBOOT_NFSROOT   — default ${GITHUB_WORKSPACE}/infra/nanopi/netboot/nfsroot
 #
-# Секреты (как в nanopi-app-ci):
+# Secrets (same as nanopi-app-ci):
 #   NANPI_HOST, NANPI_USER, NANPI_SSH_KEY
 #
-# Сценарий: после job плата грузится с NFS (U-Boot bootargs), либо ты вручную задаёшь загрузку.
+# Flow: after the job the board boots from NFS (per U-Boot bootargs), or you boot manually.
 
 name: Yocto → Netboot → reboot NanoPi
 
@@ -21,7 +21,7 @@ on:
   workflow_dispatch:
     inputs:
       mode:
-        description: "reboot = перезагрузить плату после публикации; sync-only = только файлы"
+        description: "reboot = reboot board after publish; sync-only = files only"
         type: choice
         options:
           - reboot
@@ -32,7 +32,7 @@ jobs:
   publish-and-reboot:
     runs-on: cryptowallet-host
     env:
-      # Задай в репозитории Variables, если bitbake не в ./build относительно checkout
+      # Set in repo Variables if bitbake output is not under ./build for this checkout
       YOCTO_DEPLOY_DIR: ${{ vars.YOCTO_DEPLOY_DIR }}
       NETBOOT_TFTP: ${{ vars.NETBOOT_TFTP }}
       NETBOOT_NFSROOT: ${{ vars.NETBOOT_NFSROOT }}
@@ -56,7 +56,7 @@ jobs:
           echo "deploy=${DEPLOY}" >> "$GITHUB_OUTPUT"
           echo "tftp=${TFTP}" >> "$GITHUB_OUTPUT"
           echo "nfs=${NFS}" >> "$GITHUB_OUTPUT"
-          test -d "${DEPLOY}" || (echo "Нет каталога deploy: ${DEPLOY} — собери Yocto или задай YOCTO_DEPLOY_DIR" && exit 1)
+          test -d "${DEPLOY}" || (echo "Deploy directory missing: ${DEPLOY} — run Yocto or set YOCTO_DEPLOY_DIR" && exit 1)
           test -d "${TFTP}" && test -d "${NFS}"
 
       - name: Publish kernel + dtb to TFTP
@@ -72,7 +72,7 @@ jobs:
           done
           ls -la "${TFTP}"
 
-      - name: Sync rootfs to NFS export (tar из deploy)
+      - name: Sync rootfs to NFS export (tar from deploy)
         run: |
           DEPLOY="${{ steps.paths.outputs.deploy }}"
           NFS="${{ steps.paths.outputs.nfs }}"
@@ -80,10 +80,10 @@ jobs:
           shopt -s nullglob
           TARS=("${DEPLOY}"/*.rootfs.tar.gz "${DEPLOY}"/*image*.tar.bz2 "${DEPLOY}"/*rootfs*.tar.bz2)
           if [[ ${#TARS[@]} -eq 0 || ! -f "${TARS[0]}" ]]; then
-            echo "Нет rootfs-архива в ${DEPLOY} — положи распакованный rootfs в ${NFS} вручную или собери образ с tar."
+            echo "No rootfs archive in ${DEPLOY} — unpack rootfs into ${NFS} manually or build an image that produces a tar."
             exit 0
           fi
-          echo "Используем ${TARS[0]}"
+          echo "Using ${TARS[0]}"
           sudo rm -rf "${NFS:?}/"*
           if [[ "${TARS[0]}" == *.gz ]]; then sudo tar -xzf "${TARS[0]}" -C "${NFS}"; else sudo tar -xjf "${TARS[0]}" -C "${NFS}"; fi
           sync
@@ -92,7 +92,7 @@ jobs:
         env:
           NANPI_SSH_KEY: ${{ secrets.NANPI_SSH_KEY }}
         run: |
-          test -n "${NANPI_SSH_KEY}" || (echo "NANPI_SSH_KEY не задан" && exit 1)
+          test -n "${NANPI_SSH_KEY}" || (echo "NANPI_SSH_KEY is not set" && exit 1)
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
           echo "$NANPI_SSH_KEY" > ~/.ssh/nanopi_ed25519
@@ -108,6 +108,6 @@ jobs:
           ssh -i ~/.ssh/nanopi_ed25519 -o StrictHostKeyChecking=accept-new \
             "${NANPI_USER}@${NANPI_HOST}" "sync; reboot || sudo reboot"
 
-      - name: Подсказка
+      - name: Hint
         if: ${{ github.event.inputs.mode == 'sync-only' }}
-        run: echo "Артефакты обновлены; перезагрузи NanoPi вручную или через U-Boot netboot."
+        run: echo "Artifacts updated; reboot the board manually or via U-Boot netboot."

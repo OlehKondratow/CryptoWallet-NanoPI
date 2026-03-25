@@ -13,10 +13,10 @@ This directory stores board-specific artifacts and netboot infrastructure files.
 
 - `netboot/tftp/` — staging for TFTP (here: `uImage`, `sun8i-h3-orangepi-one.dtb`, `boot.cmd` → `boot.scr`); full path on this workspace: `/data/projects/CryptoWallet-NanoPI/infra/nanopi/netboot/tftp/`
 - `netboot/nfsroot/` — NFS root tree before rsync to the host export; same workspace: `.../infra/nanopi/netboot/nfsroot/`
-- `netboot/config/` — `dnsmasq` and NFS `exports` samples (expect service paths under `/srv/cryptowallet-netboot/`)
+- `netboot/config/` — `dnsmasq` and NFS `exports` samples; **`exports` path must match `boot.cmd`** (lab often uses repo **`netboot/nfsroot/`**, not only `/srv/...`)
 - `netboot/scripts/` — `setup-netboot-host.sh`, `create_fs.sh` (copies from Yocto `deploy` into tftp + nfsroot)
 
-On the Linux host, TFTP and NFS usually point at **`/srv/cryptowallet-netboot/tftp`** and **`/srv/cryptowallet-netboot/nfsroot`** (see `boot.cmd` / U-Boot `nfsroot=`). Sync from the repo dirs with `rsync` as in `setup-netboot-host.sh`, or adjust exports to use the repo paths directly.
+**NFS:** the path in **`boot.cmd` (`nfsroot=`) must match `/etc/exports`** (often **`.../infra/nanopi/netboot/nfsroot`** in the repo). **TFTP** may use **`/srv/.../tftp`** or repo **`tftp/`**; see `setup-netboot-host.sh` for **`/srv`** layout.
 
 ---
 
@@ -35,7 +35,7 @@ The system boots over the network (TFTP + NFS), which allows fast code updates w
 
 - `bash` - main shell (instead of BusyBox shell)
 - `openssh` - remote access
-- `ntp` and `ntpdate` - accurate time synchronization
+- `ntp` and **`sntp`** — time sync (legacy **`ntpdate`** is not a separate Yocto package in Scarthgap; use **`sntp`** for one-shot query, **`ntp`** for `ntpd`)
 - `tzdata-europe` - timezone data (Europe/Warsaw)
 - `debug-tweaks` feature - root login without password (development only)
 
@@ -93,7 +93,7 @@ The current build is development-open. Planned hardening steps:
 
 1. Connect UART adapter (115200 baud)
 2. Power on the board
-3. U-Boot: load `boot.scr` from TFTP (built with `mkimage` from `infra/nanopi/netboot/tftp/boot.cmd`), or run the same commands manually — kernel **`uImage`**, DTB **`sun8i-h3-orangepi-one.dtb`**, **`bootm`**. TFTP/NFS server: **`192.168.126.3`**; NFS path in script: **`/srv/cryptowallet-netboot/nfsroot`**.
+3. U-Boot: load **`boot.scr`** from the SD FAT partition (auto-scan) or from TFTP. Build **`boot.scr`** with **`mkimage`** from `infra/nanopi/netboot/tftp/boot.cmd` — step-by-step: **`infra/nanopi/netboot/README.md`** (“Build boot.scr and copy to the SD card”). Kernel **`uImage`**, DTB **`sun8i-h3-orangepi-one.dtb`**, **`bootm`**. TFTP/NFS server: **`192.168.126.3`**; **`nfsroot=`** must match your **exports** (see **`boot.cmd`**). Successful UART excerpts: **`infra/nanopi/netboot/docs/uart-boot-success-excerpt.md`** and **`infra/nanopi/netboot/README.md`** (“Successful boot”).
 
 ## Next Steps
 

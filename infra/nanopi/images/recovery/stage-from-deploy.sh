@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Копирует готовый образ/wic в infra/nanopi/images/recovery/ с меткой времени.
-# Использование: ./stage-from-deploy.sh <path-to.wic|.img|.img.zst>
+# Copies a built .wic/.img into infra/nanopi/images/recovery/ with a timestamp.
+# Usage: ./stage-from-deploy.sh <path-to.wic|.img|.img.zst>
 set -euo pipefail
 
 SRC="${1:?Usage: $0 <image.wic|image.img|image.img.zst>}"
@@ -9,7 +9,7 @@ STAMP="$(date +%Y%m%d-%H%M)"
 BASE="cryptowallet-recovery-${STAMP}"
 
 if [[ ! -f "$SRC" ]]; then
-  echo "Файл не найден: $SRC" >&2
+  echo "File not found: $SRC" >&2
   exit 1
 fi
 

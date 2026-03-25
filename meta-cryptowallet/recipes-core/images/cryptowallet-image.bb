@@ -1,4 +1,4 @@
-SUMMARY = "CryptoWallet base image for NanoPI NEO"
+SUMMARY = "CryptoWallet base image (Orange Pi One / H3 lab target)"
 DESCRIPTION = "Minimal image containing networking, SSH, and CryptoWallet app placeholder."
 LICENSE = "MIT"
 

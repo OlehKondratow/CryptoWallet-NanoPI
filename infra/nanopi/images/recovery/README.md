@@ -1,41 +1,41 @@
 # Recovery slot (4 GB microSD)
 
-Сюда **не коммитятся** сами образы — только описание и скрипт. Бинарники большие; храни их на диске или в артефактах CI.
+**Image binaries are not committed here** — only this description and helper scripts. Files are large; keep them on disk or in CI artifacts.
 
-## Что положить
+## What to store
 
-- Минимальный **known-good** образ для платы из текущей сборки (лаб: **Orange Pi One**, `orange-pi-one`): загрузка, SSH, сеть, утилиты восстановления.
-- Имя по соглашению:
+- Minimal **known-good** image for your current build (lab board: **Orange Pi One**, `orange-pi-one`): boot, SSH, network, recovery utilities.
+- Filename convention:
 
   `cryptowallet-recovery-<yyyy-mm-dd>-<git-sha>.img.zst`
 
-- Контрольная сумма рядом: `.sha256`
+- Place a checksum next to it: `.sha256`
 
-## Откуда взять образ
+## Where to get an image
 
-1. Собрать в Yocto (`bitbake cryptowallet-image` или `core-image-minimal`) и взять `.wic` / `.img` из каталога деплоя для `MACHINE`, например **`/data/projects/poky/build/tmp/deploy/images/orange-pi-one/`** (или `build/tmp/deploy/images/orange-pi-one/` внутри дерева Poky).
-2. Или экспортировать с рабочей 4 GB карты:
+1. Build with Yocto (`bitbake cryptowallet-image` or `core-image-minimal`) and take `.wic` / `.img` from the deploy dir for `MACHINE`, e.g. **`/data/projects/poky/build/tmp/deploy/images/orange-pi-one/`** (or `build/tmp/deploy/images/orange-pi-one/` inside your Poky tree).
+2. Or dump from a working 4 GB card:
 
    ```bash
    sudo dd if=/dev/mmcblk0 bs=4M status=progress | zstd -19 -T0 -o cryptowallet-recovery-$(date +%F).img.zst
    sha256sum cryptowallet-recovery-*.img.zst > cryptowallet-recovery-*.img.zst.sha256
    ```
 
-## Скопировать артефакт в этот каталог
+## Copy an artifact into this directory
 
-Из корня репозитория (после сборки):
+From the repository root (after a build):
 
 ```bash
 cd /data/projects/CryptoWallet-NanoPI
-# подставь реальное имя .wic/.img из deploy (зависит от IMAGE_FSTYPES)
+# use the real .wic/..deploy name (depends on IMAGE_FSTYPES)
 ./infra/nanopi/images/recovery/stage-from-deploy.sh /data/projects/poky/build/tmp/deploy/images/orange-pi-one/core-image-minimal-orange-pi-one.wic
-# или уже сжатый образ рядом:
+# or a compressed image path:
 ./infra/nanopi/images/recovery/stage-from-deploy.sh /data/projects/CryptoWallet-NanoPI/cryptowallet-recovery-2025-03-01.img.zst
 ```
 
-Скрипт кладёт копию с датой в **этот** каталог (не в git).
+The script writes a **timestamped copy into this directory** (not tracked by git).
 
-## Использование
+## Usage
 
-- Подписать SD как **RESCUE-4** наклейкой.
-- В аварии: вставить карту, загрузиться, починить основную систему или перепрошить dev-карту.
+- Label the SD **RESCUE-4**.
+- In an emergency: insert the card, boot, repair the main system, or reflash the dev card.

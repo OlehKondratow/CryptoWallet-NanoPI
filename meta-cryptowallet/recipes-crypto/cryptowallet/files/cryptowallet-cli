@@ -1,0 +1,5 @@
+#!/bin/sh
+# Tiny CLI for manual checks; real app replaces this.
+echo "cryptowallet 0.2 (placeholder)"
+echo "Service: /etc/init.d/cryptowallet {start|stop|restart}"
+echo "Log:     /var/log/cryptowalletd.log (after daemon start)"

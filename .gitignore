@@ -9,9 +9,27 @@ infra/.env
 legacy-stm32-cryptowallet/
 .gitea/.secret.txt
 
-# Образы SD (только README/скрипты в git)
+# SD card images (README/scripts only in git)
 infra/nanopi/images/**/*.wic
 infra/nanopi/images/**/*.img
 infra/nanopi/images/**/*.img.zst
 infra/nanopi/images/**/*.zst
 !infra/nanopi/images/**/README.md
+
+# --- Новые правила для очистки репозитория ---
+
+# Игнорируем временные файлы и логи внутри nfsroot
+**/nfsroot/var/log/*
+**/nfsroot/var/run/*
+**/nfsroot/var/tmp/*
+**/nfsroot/var/lock/*
+**/nfsroot/var/lib/*
+**/nfsroot/run/*
+**/nfsroot/tmp/*
+**/nfsroot/etc/volatile.cache
+
+# Игнорируем SSH ключи (безопасность + отсутствие шума)
+**/nfsroot/etc/ssh/ssh_host_*_key*
+
+# Игнорируем конфигурацию DNS (часто меняется при загрузке)
+**/nfsroot/etc/resolv.conf

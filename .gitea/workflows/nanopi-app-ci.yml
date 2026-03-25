@@ -1,19 +1,19 @@
 # CI/CD for app debugging on NanoPi NEO.
 #
 # Layout:
-# - verify: быстрые проверки (раннер с меткой ubuntu-latest, как в simple-ci).
-# - deploy-to-nanopi: по SSH копирует артефакт/скрипт на плату (секреты в репозитории Gitea).
+# - verify: quick checks (runner label ubuntu-latest, like simple-ci).
+# - deploy-to-nanopi: copies artifact/script to the board over SSH (secrets in Gitea).
 #
-# Gitea с платы/LAN: http://192.168.126.3:3000/ (IP хоста ws8, не macvlan 192.168.127.5).
-# Секреты (Settings -> Secrets and variables -> Actions):
-#   NANPI_HOST          — IP или hostname (например 192.168.127.166)
-#   NANPI_USER          — пользователь SSH (например root или pi)
-#   NANPI_SSH_KEY       — приватный ключ (PEM), одна строка или multiline
-# Опционально:
-#   NANPI_DEPLOY_PATH   — каталог на плате (по умолчанию /opt/cryptowallet)
+# Gitea from the board/LAN: http://192.168.126.3:3000/ (ws8 host IP, not macvlan 192.168.127.5).
+# Secrets (Settings -> Secrets and variables -> Actions):
+#   NANPI_HOST          — IP or hostname (e.g. 192.168.127.166)
+#   NANPI_USER          — SSH user (e.g. root or pi)
+#   NANPI_SSH_KEY       — private key (PEM), single-line or multiline
+# Optional:
+#   NANPI_DEPLOY_PATH   — directory on the board (default /opt/cryptowallet)
 #
-# Включи Actions в Gitea: Settings -> Repository -> Actions -> Enable Actions.
-# Зарегистрируй act_runner на хосте сборки и/или на NanoPi (см. infra/gitea/register-act-runner-nanopi.sh).
+# Enable Actions in Gitea: Settings -> Repository -> Actions -> Enable Actions.
+# Register act_runner on the build host and/or NanoPi (see infra/gitea/register-act-runner-nanopi.sh).
 
 name: NanoPi App CI
 
@@ -55,7 +55,7 @@ jobs:
           chmod 600 ~/.ssh/nanopi_ed25519
           ssh-keyscan -H "${{ secrets.NANPI_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null || true
 
-      - name: Deploy marker (замени на свой скрипт сборки/копирование бинаря)
+      - name: Deploy marker (replace with your build script or binary copy)
         env:
           NANPI_HOST: ${{ secrets.NANPI_HOST }}
           NANPI_USER: ${{ secrets.NANPI_USER }}
@@ -66,7 +66,7 @@ jobs:
             "${NANPI_USER}@${NANPI_HOST}" \
             "mkdir -p '${DEPLOY_PATH}' && echo 'deploy $(date -u +%Y-%m-%dT%H:%M:%SZ) $(git rev-parse --short HEAD 2>/dev/null || echo unknown)' >> '${DEPLOY_PATH}/.deploy-log'"
 
-      - name: Remote smoke (пример)
+      - name: Remote smoke (example)
         env:
           NANPI_HOST: ${{ secrets.NANPI_HOST }}
           NANPI_USER: ${{ secrets.NANPI_USER }}

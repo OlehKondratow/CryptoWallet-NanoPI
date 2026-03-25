@@ -1,0 +1,9 @@
+#!/bin/sh
+# CryptoWallet background process — replace with real daemon / binary.
+LOGDIR=/var/log
+LOG=$LOGDIR/cryptowalletd.log
+mkdir -p "$LOGDIR"
+while true; do
+	echo "$(date +%Y-%m-%dT%H:%M:%SZ) cryptowalletd heartbeat" >>"$LOG"
+	sleep 60
+done

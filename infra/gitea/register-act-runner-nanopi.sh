@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
-# Регистрация Gitea act_runner на NanoPi или другом хосте.
+# Register Gitea act_runner on NanoPi or another host.
 #
-# Документация: https://docs.gitea.com/usage/actions/act-runner
+# Documentation: https://docs.gitea.com/usage/actions/act-runner
 #
-# В Gitea: Settings -> Actions -> Runners -> Create new runner — URL и registration token.
+# In Gitea: Settings -> Actions -> Runners -> Create new runner — copy URL and registration token.
 #
-# Пример:
+# Examples:
 #   export GITEA_INSTANCE_URL="http://192.168.126.3:3000"
 #   export GITEA_RUNNER_REGISTRATION_TOKEN="..."
-#   # NanoPi NEO (armhf / ARMv7): по умолчанию linux-jake arm-7
+#   # NanoPi NEO (armhf / ARMv7): default artifact is linux-arm-7
 #   ./register-act-runner-nanopi.sh
 #
-# Раннер на ПК (amd64):
+# Runner on PC (amd64):
 #   ARCH_LABEL=linux-amd64 ./register-act-runner-nanopi.sh
 #
 set -euo pipefail
@@ -20,7 +20,7 @@ set -euo pipefail
 : "${GITEA_RUNNER_REGISTRATION_TOKEN:?Set GITEA_RUNNER_REGISTRATION_TOKEN}"
 
 ACT_RUNNER_VERSION="${ACT_RUNNER_VERSION:-0.2.11}"
-# Имя билда из релиза: linux-amd64 | linux-arm-7 | linux-arm64 | ...
+# Release artifact basename: linux-amd64 | linux-arm-7 | linux-arm64 | ...
 ARCH_LABEL="${ARCH_LABEL:-linux-arm-7}"
 
 WORKDIR="${WORKDIR:-$HOME/act-runner}"
@@ -45,5 +45,5 @@ fi
   --labels "${RUNNER_LABELS:-nanopi,self-hosted}"
 
 echo
-echo "Запуск (foreground). Для постоянной работы оформи systemd unit:"
+echo "Running in foreground. For production, create a systemd unit:"
 echo "  cd ${WORKDIR} && ./act_runner daemon"

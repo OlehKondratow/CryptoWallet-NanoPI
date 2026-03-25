@@ -1,1 +1,9 @@
-/srv/cryptowallet-netboot/nfsroot 192.168.126.0/23(rw,sync,no_subtree_check,no_root_squash)
+# Install as /etc/exports.d/cryptowallet-netboot.exports then: sudo exportfs -rav
+#
+# The exported directory MUST be the same path as in boot.cmd: setenv nfsroot <this path>
+#
+# Typical lab: export the tree populated by create_fs.sh (no /srv copy):
+/data/projects/CryptoWallet-NanoPI/infra/nanopi/netboot/nfsroot 192.168.126.0/23(rw,sync,no_subtree_check,no_root_squash)
+#
+# Alternative: rsync repo nfsroot to /srv/... (see setup-netboot-host.sh), export that path, and set the same path in boot.cmd:
+# /srv/cryptowallet-netboot/nfsroot 192.168.126.0/23(rw,sync,no_subtree_check,no_root_squash)
