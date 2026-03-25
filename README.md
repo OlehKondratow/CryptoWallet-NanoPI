@@ -2,7 +2,7 @@
 
 Yocto **Scarthgap**–based firmware for **Allwinner H3** boards, aimed at a **crypto-wallet–style** appliance: small rootfs, SSH, optional netboot for fast iteration, and a dedicated **`meta-cryptowallet`** layer for the application.
 
-### Lab walkthrough (Russian)
+### Lab walkthrough
 
 End-to-end narrative with **commands and sample output** (**Gitea → runners → Poky → TFTP/NFS → netboot debug → app**): **[`docs/lab-journey.md`](docs/lab-journey.md)**.
 
