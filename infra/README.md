@@ -10,6 +10,7 @@ It is compatible with `podman compose` and `docker compose`.
 - `.env.example` - Tunables for branch, threads, and cache paths
 - `dev-shell.sh` - Open interactive shell in the dev container
 - `build-image.sh` - Build a Yocto image in one command
+- `nanopi/` - Board-specific images, logs, and netboot files
 
 ## Quick start
 

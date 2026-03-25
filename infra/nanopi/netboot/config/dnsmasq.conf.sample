@@ -1,0 +1,23 @@
+# NanoPi netboot example (adjust interface and addresses).
+# Run with: dnsmasq --conf-file=./dnsmasq.conf
+
+port=0
+interface=eth0
+bind-interfaces
+
+# DHCP pool on lab network
+dhcp-range=192.168.126.100,192.168.126.199,255.255.254.0,12h
+dhcp-option=option:router,192.168.126.1
+dhcp-option=option:dns-server,192.168.126.1
+
+# Optional static lease for NanoPi from observed MAC
+dhcp-host=02:81:5b:e4:93:7c,192.168.126.166,nanopi-neo,infinite
+
+# TFTP service
+enable-tftp
+tftp-root=/srv/cryptowallet-netboot/tftp
+
+# U-Boot boot script or kernel filename (depends on your flow)
+dhcp-boot=zImage
+
+log-dhcp

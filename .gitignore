@@ -7,3 +7,11 @@ tmp/
 infra/.env
 .venv/
 legacy-stm32-cryptowallet/
+.gitea/.secret.txt
+
+# Образы SD (только README/скрипты в git)
+infra/nanopi/images/**/*.wic
+infra/nanopi/images/**/*.img
+infra/nanopi/images/**/*.img.zst
+infra/nanopi/images/**/*.zst
+!infra/nanopi/images/**/README.md

@@ -1,0 +1,1 @@
+/srv/cryptowallet-netboot/nfsroot 192.168.126.0/23(rw,sync,no_subtree_check,no_root_squash)
