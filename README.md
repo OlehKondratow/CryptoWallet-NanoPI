@@ -1,6 +1,6 @@
-# CryptoWallet Yocto for NanoPI NEO v1.2
+# CryptoWallet Yocto (Allwinner H3)
 
-This repository contains a starter Yocto Project layout for building a custom Linux image for NanoPI NEO v1.2, focused on a CryptoWallet appliance use case.
+This repository contains a starter Yocto Project layout for building a custom Linux image for wallet-style devices on Allwinner H3 boards, focused on a CryptoWallet appliance use case.
 
 ## Goals
 
@@ -11,9 +11,9 @@ This repository contains a starter Yocto Project layout for building a custom Li
 
 ## Target board
 
-- Board: NanoPI NEO v1.2
+- **Current lab board:** Orange Pi One — `MACHINE`: `orange-pi-one` (uImage + `sun8i-h3-orangepi-one.dtb`; see `infra/nanopi/README.md` and netboot layout under `infra/nanopi/netboot/`).
+- **Also supported in templates:** NanoPi NEO v1.2 — `MACHINE`: `nanopi-neo` (swap `MACHINE` and DTB if you target that board).
 - SoC: Allwinner H3
-- Typical `MACHINE`: `nanopi-neo`
 
 ## Prerequisites
 
@@ -65,7 +65,7 @@ cp conf/local.conf.sample conf/local.conf
 bitbake cryptowallet-image
 ```
 
-Resulting image artifacts are generated under `build/tmp/deploy/images/nanopi-neo/`.
+After `bitbake`, images for the configured `MACHINE` appear under `build/tmp/deploy/images/<machine>/` (for example `build/tmp/deploy/images/orange-pi-one/`). If you keep a separate Poky tree at `/data/projects/poky` and only track this repo, the same path there is `/data/projects/poky/build/tmp/deploy/images/orange-pi-one/`.
 
 ## Containerized development (recommended)
 

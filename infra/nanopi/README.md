@@ -11,10 +11,12 @@ This directory stores board-specific artifacts and netboot infrastructure files.
 
 ## Netboot Layout
 
-- `netboot/tftp` - files served by TFTP (`zImage`, `*.dtb`, optional initramfs)
-- `netboot/nfsroot` - exported NFS root filesystem
-- `netboot/config` - `dnsmasq` and NFS exports templates
-- `netboot/scripts` - helper scripts for setup and checks
+- `netboot/tftp/` — staging for TFTP (here: `uImage`, `sun8i-h3-orangepi-one.dtb`, `boot.cmd` → `boot.scr`); full path on this workspace: `/data/projects/CryptoWallet-NanoPI/infra/nanopi/netboot/tftp/`
+- `netboot/nfsroot/` — NFS root tree before rsync to the host export; same workspace: `.../infra/nanopi/netboot/nfsroot/`
+- `netboot/config/` — `dnsmasq` and NFS `exports` samples (expect service paths under `/srv/cryptowallet-netboot/`)
+- `netboot/scripts/` — `setup-netboot-host.sh`, `create_fs.sh` (copies from Yocto `deploy` into tftp + nfsroot)
+
+On the Linux host, TFTP and NFS usually point at **`/srv/cryptowallet-netboot/tftp`** and **`/srv/cryptowallet-netboot/nfsroot`** (see `boot.cmd` / U-Boot `nfsroot=`). Sync from the repo dirs with `rsync` as in `setup-netboot-host.sh`, or adjust exports to use the repo paths directly.
 
 ---
 
@@ -37,26 +39,37 @@ The system boots over the network (TFTP + NFS), which allows fast code updates w
 - `tzdata-europe` - timezone data (Europe/Warsaw)
 - `debug-tweaks` feature - root login without password (development only)
 
-## Artifact Mapping (`deploy/images`)
+## Artifact Mapping (`deploy/images/orange-pi-one`)
+
+Default Yocto output on this machine (Poky build dir): **`/data/projects/poky/build/tmp/deploy/images/orange-pi-one/`**
 
 After `bitbake core-image-minimal`, use:
 
-- `uImage` -> deploy to `/tftp/uImage`
-- `sun8i-h3-orangepi-one.dtb` -> deploy to `/tftp/sun8i-h3-orangepi-one.dtb`
-- `*.rootfs.tar.bz2` -> extract into `/nfsroot/`
-- `u-boot-sunxi-with-spl.bin` -> write to SD card (`dd`)
+- `uImage` → `infra/nanopi/netboot/tftp/uImage` (and/or `/srv/cryptowallet-netboot/tftp/uImage`)
+- `sun8i-h3-orangepi-one.dtb` → same under `tftp/`
+- `core-image-minimal-orange-pi-one.rootfs.tar.bz2` → extract into `infra/nanopi/netboot/nfsroot/` (then rsync to `/srv/.../nfsroot/` if needed)
+- `u-boot-sunxi-with-spl.bin` → write to SD card (`dd`)
+
+**One-shot sync** from deploy into repo netboot dirs (run with root if `sudo` inside the script must be non-interactive):
+
+```bash
+sudo /data/projects/CryptoWallet-NanoPI/infra/nanopi/netboot/scripts/create_fs.sh
+```
+
+Environment overrides: `DEPLOY_DIR`, `NFS_DIR`, `TFTP_DIR`, `KERNEL_IMAGE`, `DTB_FILE`, `ROOTFS_TARBALL` (see script).
 
 ## Deployment Cheatsheet
 
 ### 1) Prepare NFS and TFTP
 
 ```bash
-# Extract rootfs (use sudo to preserve root ownership and permissions)
-sudo rm -rf /path/to/nfsroot/*
-sudo tar -xjvf core-image-minimal-orange-pi-one.rootfs.tar.bz2 -C /path/to/nfsroot/
+cd /data/projects/poky/build/tmp/deploy/images/orange-pi-one
+# Extract rootfs into repo nfsroot (use sudo to preserve ownership)
+sudo rm -rf /data/projects/CryptoWallet-NanoPI/infra/nanopi/netboot/nfsroot/*
+sudo tar -xjvf core-image-minimal-orange-pi-one.rootfs.tar.bz2 -C /data/projects/CryptoWallet-NanoPI/infra/nanopi/netboot/nfsroot/
 
-# Copy kernel + DTB
-cp uImage sun8i-h3-orangepi-one.dtb /path/to/tftp/
+# Kernel + DTB
+cp -v uImage sun8i-h3-orangepi-one.dtb /data/projects/CryptoWallet-NanoPI/infra/nanopi/netboot/tftp/
 ```
 
 ### 2) Write bootloader to SD
@@ -80,11 +93,7 @@ The current build is development-open. Planned hardening steps:
 
 1. Connect UART adapter (115200 baud)
 2. Power on the board
-3. Ensure U-Boot netboot command sequence is configured:
-
-```bash
-tftp ${kernel_addr_r} uImage && tftp ${fdt_addr_r} dtb && bootm
-```
+3. U-Boot: load `boot.scr` from TFTP (built with `mkimage` from `infra/nanopi/netboot/tftp/boot.cmd`), or run the same commands manually — kernel **`uImage`**, DTB **`sun8i-h3-orangepi-one.dtb`**, **`bootm`**. TFTP/NFS server: **`192.168.126.3`**; NFS path in script: **`/srv/cryptowallet-netboot/nfsroot`**.
 
 ## Next Steps
 

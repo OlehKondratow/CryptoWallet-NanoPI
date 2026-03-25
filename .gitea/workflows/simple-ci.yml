@@ -31,5 +31,5 @@ jobs:
       - name: Basic Yocto metadata sanity checks
         run: |
           grep -q 'LAYERSERIES_COMPAT_cryptowallet' meta-cryptowallet/conf/layer.conf
-          grep -q 'MACHINE ??= "nanopi-neo"' build/conf/local.conf.sample
+          grep -q 'MACHINE ??= "orange-pi-one"' build/conf/local.conf.sample
           grep -q 'cryptowallet-image' README.md

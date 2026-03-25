@@ -1,35 +1,51 @@
-# NanoPi NEO Netboot (TFTP + NFS)
+# Netboot (TFTP + NFS) — Orange Pi One
 
-## Host-side prep
+Netboot assets live under this directory in the repo:
+
+| Role | Path in repo |
+|------|----------------|
+| TFTP root (staging) | `/data/projects/CryptoWallet-NanoPI/infra/nanopi/netboot/tftp/` |
+| NFS root (staging) | `/data/projects/CryptoWallet-NanoPI/infra/nanopi/netboot/nfsroot/` |
+| U-Boot script source | `tftp/boot.cmd` → compile to `boot.scr` with `mkimage` |
+| Host service samples | `config/` |
+
+On the boot server, dnsmasq/NFS typically use **`/srv/cryptowallet-netboot/tftp`** and **`/srv/cryptowallet-netboot/nfsroot`** (must match `nfsroot=` in the kernel command line). Populate those from the repo dirs (`rsync` — см. `scripts/setup-netboot-host.sh`).
+
+## Populate from Yocto deploy
+
+Deploy directory used in scripts: **`/data/projects/poky/build/tmp/deploy/images/orange-pi-one/`**
 
 ```bash
-cd infra/nanopi/netboot
-./scripts/setup-netboot-host.sh
+sudo /data/projects/CryptoWallet-NanoPI/infra/nanopi/netboot/scripts/create_fs.sh
 ```
 
-Populate `tftp/` with:
+Or run `scripts/setup-netboot-host.sh` for folder creation and printed host steps.
 
-- `zImage`
-- `sun8i-h3-nanopi-neo.dtb`
-- optional `initramfs.cpio.gz`
+## TFTP payload (Orange Pi One)
 
-Populate `nfsroot/` with extracted rootfs.
+- `uImage`
+- `sun8i-h3-orangepi-one.dtb`
+- `boot.scr` (from `boot.cmd` via `uboot-mkimage` / `mkimage`)
 
-## U-Boot test commands (NanoPi NEO)
+## U-Boot test commands (Orange Pi One)
 
-Replace host IP if отличается (в лабе TFTP/NFS на `192.168.126.3`):
+Board loads a **uImage** and boots with **`bootm`**. Replace the server IP if yours differs (лабораторный TFTP/NFS: **`192.168.126.3`**).
 
 ```bash
 setenv serverip 192.168.126.3
 dhcp
-tftp 0x42000000 zImage
-tftp 0x43000000 sun8i-h3-nanopi-neo.dtb
-setenv bootargs 'console=ttyS0,115200 root=/dev/nfs nfsroot=192.168.126.3:/srv/cryptowallet-netboot/nfsroot,vers=3,tcp ip=dhcp rootwait panic=10'
-bootz 0x42000000 - 0x43000000
+tftp ${kernel_addr_r} uImage
+tftp ${fdt_addr_r} sun8i-h3-orangepi-one.dtb
+setenv bootargs 'console=ttyS0,115200 root=/dev/nfs nfsroot=192.168.126.3:/srv/cryptowallet-netboot/nfsroot,v3,tcp ip=dhcp rw'
+bootm ${kernel_addr_r} - ${fdt_addr_r}
 ```
 
-Persist only after successful boot:
+Persist only after a successful boot:
 
 ```bash
 saveenv
 ```
+
+### NanoPi NEO
+
+If `MACHINE` is `nanopi-neo`, use **`zImage`** / **`bootz`** and **`sun8i-h3-nanopi-neo.dtb`** instead; point `nfsroot=` at the same host path if the rootfs is shared.

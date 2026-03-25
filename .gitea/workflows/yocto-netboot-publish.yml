@@ -2,13 +2,13 @@
 # Раннер: cryptowallet-host (ws8), где лежат каталоги netboot и (после bitbake) deploy.
 #
 # Перед первым запуском на хосте:
-#   - bitbake cryptowallet-image (или минимум ядро + rootfs для NFS)
-#   - rootfs для NFS: распаковать rootfs.tar.gz в infra/nanopi/netboot/nfsroot/ ИЛИ указать свой путь
+#   - bitbake cryptowallet-image или core-image-minimal (orange-pi-one)
+#   - rootfs: скрипт распакует tar в NETBOOT_NFSROOT (по умолчанию infra/nanopi/netboot/nfsroot)
 #
 # Переменные репозитория (Settings -> Actions -> Variables) — при необходимости:
-#   YOCTO_DEPLOY_DIR  — например .../build/tmp/deploy/images/nanopi-neo
-#   NETBOOT_TFTP      — по умолчанию infra/nanopi/netboot/tftp в корне репозитория
-#   NETBOOT_NFSROOT   — по умолчанию infra/nanopi/netboot/nfsroot
+#   YOCTO_DEPLOY_DIR  — например /data/projects/poky/build/tmp/deploy/images/orange-pi-one
+#   NETBOOT_TFTP      — по умолчанию ${GITHUB_WORKSPACE}/infra/nanopi/netboot/tftp
+#   NETBOOT_NFSROOT   — по умолчанию ${GITHUB_WORKSPACE}/infra/nanopi/netboot/nfsroot
 #
 # Секреты (как в nanopi-app-ci):
 #   NANPI_HOST, NANPI_USER, NANPI_SSH_KEY
@@ -44,7 +44,13 @@ jobs:
         id: paths
         run: |
           REPO="${GITHUB_WORKSPACE}"
-          DEPLOY="${YOCTO_DEPLOY_DIR:-${REPO}/build/tmp/deploy/images/nanopi-neo}"
+          if [[ -n "${YOCTO_DEPLOY_DIR:-}" ]]; then
+            DEPLOY="${YOCTO_DEPLOY_DIR}"
+          elif [[ -d "/data/projects/poky/build/tmp/deploy/images/orange-pi-one" ]]; then
+            DEPLOY="/data/projects/poky/build/tmp/deploy/images/orange-pi-one"
+          else
+            DEPLOY="${REPO}/build/tmp/deploy/images/orange-pi-one"
+          fi
           if [[ -z "${NETBOOT_TFTP:-}" ]]; then TFTP="${REPO}/infra/nanopi/netboot/tftp"; else TFTP="${NETBOOT_TFTP}"; fi
           if [[ -z "${NETBOOT_NFSROOT:-}" ]]; then NFS="${REPO}/infra/nanopi/netboot/nfsroot"; else NFS="${NETBOOT_NFSROOT}"; fi
           echo "deploy=${DEPLOY}" >> "$GITHUB_OUTPUT"
@@ -61,7 +67,7 @@ jobs:
           for f in zImage uImage; do
             if [[ -f "${DEPLOY}/${f}" ]]; then cp -av "${DEPLOY}/${f}" "${TFTP}/"; break; fi
           done
-          for dtb in sun8i-h3-nanopi-neo.dtb; do
+          for dtb in sun8i-h3-orangepi-one.dtb sun8i-h3-nanopi-neo.dtb; do
             if [[ -f "${DEPLOY}/${dtb}" ]]; then cp -av "${DEPLOY}/${dtb}" "${TFTP}/"; fi
           done
           ls -la "${TFTP}"
